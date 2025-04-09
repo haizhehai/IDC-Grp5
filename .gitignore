@@ -1,1 +1,53 @@
-.venv
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.env
+.venv/
+
+# Arduino
+*.hex
+*.elf
+*.eep
+*.map
+*.bin
+*.d
+*.o
+
+# PlatformIO
+.pio/
+.vscode/
+
+# Arduino IDE
+*.ino.*
+*.a
+*.d
+*.dep
+*.sdf
+*.pro.user
+*.cproject
+*.settings/
+*.idea/
+*.launch/
+*.pydevproject
+*.project
+
+# Logs
+*.log
+*.log.*
+
+# Misc
+*.orig
+*.out
+*.exe
+*.dll
