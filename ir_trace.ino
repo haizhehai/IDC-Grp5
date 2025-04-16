@@ -35,15 +35,15 @@ void robotReverse()
 
 void robotTurnLeft()
 {
- motor1.setSpeed(10);    // Motor 1 runs forward.
- motor2.setSpeed(10);   // Motor 2 runs backward.
+ motor1.setSpeed(100);    // Motor 1 runs forward.
+ motor2.setSpeed(100);   // Motor 2 runs backward.
 }
 
 
 void robotTurnRight()
 {
- motor1.setSpeed(-10);   // Motor 1 runs backward.
- motor2.setSpeed(-10);    // Motor 2 runs forkward.
+ motor1.setSpeed(-100);   // Motor 1 runs backward.
+ motor2.setSpeed(-100);    // Motor 2 runs forkward.
 }
 void setup()
 {
