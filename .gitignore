@@ -51,3 +51,7 @@ __pycache__/
 *.out
 *.exe
 *.dll
+*.h5
+
+/Images/*
+/Dataset/*
