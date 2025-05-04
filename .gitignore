@@ -52,6 +52,7 @@ __pycache__/
 *.exe
 *.dll
 *.h5
+*.keras
 
 /Images/*
 /Dataset/*
