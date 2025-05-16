@@ -12,8 +12,8 @@ model = YOLO('best.pt')
 cap = cv2.VideoCapture(1)
 
 # Set camera resolution
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 860)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
 # Set camera FPS (try 30 or 60 depending on your camera)
 cap.set(cv2.CAP_PROP_FPS, 30)
@@ -29,7 +29,7 @@ while True:
         break
     
     # Run inference on the frame with optimized settings
-    results = model(frame, conf=0.5, iou=0.5, max_det=16, vid_stride=2) 
+    results = model(frame, conf=0.45, iou=0.6, max_det=16, vid_stride=2) 
     
     # Plot the results on the frame
     annotated_frame = results[0].plot()
