@@ -52,7 +52,13 @@ __pycache__/
 *.exe
 *.dll
 *.h5
+*.keras
+*.pt
 
 /Images/*
 /Dataset/*
+<<<<<<< HEAD
 /idcenv/*
+=======
+/Augmented_Images/*
+>>>>>>> a9b264e7fc15832fcab7b3638c95e7a925306b01
