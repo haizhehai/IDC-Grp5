@@ -8,6 +8,12 @@ from datetime import datetime
 from ultralytics import YOLO
 from collections import Counter
 
+# Explicitly start window thread
+cv2.startWindowThread()
+
+# Create window first before capturing
+cv2.namedWindow("Object Detection", cv2.WINDOW_NORMAL)
+
 class VideoStreamThread:
     def __init__(self, src=0, width=640, height=360, fps=30):
         self.cap = cv2.VideoCapture(src)
@@ -153,18 +159,20 @@ def main():
     try:
         while True:
             frame_count += 1
-            # Get the latest frame from the video stream
             frame = video_stream.read()
+
+            # Resize frame for faster processing
+            resized_frame = cv2.resize(frame, (640, 360))
             
             # Process every third frame to reduce load
             if frame_count % 3 == 0:
                 # Submit the frame for inference
-                model_thread.submit_frame(frame.copy())
+                model_thread.submit_frame(resized_frame.copy())
             
             # Get inference results if available
             results = model_thread.get_results()
             if results:
-                frame, yolo_results = results
+                resized_frame, yolo_results = results
                 # Get the current detections
                 current_detections = yolo_results[0].boxes.cls.cpu().numpy()
                 # Count objects in current frame
@@ -202,7 +210,7 @@ def main():
             cv2.imshow('Object Detection', display_frame)
             
             # Break the loop if 'q' is pressed
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(5) & 0xFF == ord('q'):
                 break
     
     finally:
