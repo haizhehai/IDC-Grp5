@@ -6,9 +6,10 @@ import threading
 import queue
 from datetime import datetime
 from ultralytics import YOLO
+from collections import Counter
 
 class VideoStreamThread:
-    def __init__(self, src=0, width=640, height=480, fps=60):
+    def __init__(self, src=0, width=640, height=360, fps=30):
         self.cap = cv2.VideoCapture(src)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -16,7 +17,7 @@ class VideoStreamThread:
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         
         # Initialize the queue and thread
-        self.frame_queue = queue.Queue(maxsize=2)  # Small queue to minimize latency
+        self.frame_queue = queue.Queue(maxsize=1)
         self.stopped = False
         
         # Get the first frame
@@ -65,7 +66,7 @@ class VideoStreamThread:
 
 
 class ModelInferenceThread:
-    def __init__(self, model_path='med.pt', conf=0.45, iou=0.6, max_det=16):
+    def __init__(self, model_path='med.pt', conf=0.6, iou=0.5, max_det=5):
         # Load the YOLO model
         self.model = YOLO(model_path)
         self.conf = conf
@@ -73,8 +74,8 @@ class ModelInferenceThread:
         self.max_det = max_det
         
         # Initialize queues
-        self.input_queue = queue.Queue(maxsize=1)  # Input frames
-        self.output_queue = queue.Queue(maxsize=1)  # Output results
+        self.input_queue = queue.Queue(maxsize=1)
+        self.output_queue = queue.Queue(maxsize=1)
         
         self.stopped = False
     
@@ -129,8 +130,8 @@ class ModelInferenceThread:
 def main():
     # Initialize video stream and model inference threads
     print("Starting video stream...")
-    video_stream = VideoStreamThread(src=1, width=640, height=480, fps=60).start()
-    time.sleep(1.0)  # Allow camera to warm up
+    video_stream = VideoStreamThread(src=1, width=640, height=360, fps=30).start()
+    time.sleep(1.0)
     
     print("Loading YOLO model...")
     model_thread = ModelInferenceThread(model_path='med.pt').start()
@@ -140,23 +141,37 @@ def main():
     fps_start_time = time.time()
     fps = 0
     
+    # Initialize counter for objects
+    object_counter = Counter()
+    
     print("Starting detection loop...")
     
     # Placeholder for the latest annotated frame
     latest_annotated_frame = None
+    frame_count = 0
     
     try:
         while True:
+            frame_count += 1
             # Get the latest frame from the video stream
             frame = video_stream.read()
             
-            # Submit the frame for inference
-            model_thread.submit_frame(frame.copy())
+            # Process every third frame to reduce load
+            if frame_count % 3 == 0:
+                # Submit the frame for inference
+                model_thread.submit_frame(frame.copy())
             
             # Get inference results if available
             results = model_thread.get_results()
             if results:
                 frame, yolo_results = results
+                # Get the current detections
+                current_detections = yolo_results[0].boxes.cls.cpu().numpy()
+                # Count objects in current frame
+                current_counts = Counter([yolo_results[0].names[int(cls)] for cls in current_detections])
+                # Update total counts
+                object_counter = current_counts
+                
                 # Process the results and draw on the frame
                 annotated_frame = yolo_results[0].plot()
                 latest_annotated_frame = annotated_frame
@@ -166,7 +181,7 @@ def main():
             
             # Calculate and display FPS
             fps_counter += 1
-            if (time.time() - fps_start_time) > 1.0:  # Update FPS every second
+            if (time.time() - fps_start_time) > 1.0:
                 fps = fps_counter / (time.time() - fps_start_time)
                 fps_counter = 0
                 fps_start_time = time.time()
@@ -174,6 +189,14 @@ def main():
             # Display FPS on the frame
             cv2.putText(display_frame, f"FPS: {fps:.2f}", (10, 30), 
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            
+            # Display object counts
+            y_offset = 70
+            for class_name, count in object_counter.items():
+                text = f"{class_name}: {count}"
+                cv2.putText(display_frame, text, (10, y_offset), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                y_offset += 30
             
             # Show the frame
             cv2.imshow('Object Detection', display_frame)
