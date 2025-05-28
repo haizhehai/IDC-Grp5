@@ -54,6 +54,7 @@ __pycache__/
 *.h5
 *.keras
 *.pt
+*.env.local
 
 /Images/*
 /Dataset/*

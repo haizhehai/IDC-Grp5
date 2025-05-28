@@ -7,6 +7,8 @@ import queue
 from datetime import datetime
 from ultralytics import YOLO
 from collections import Counter
+import requests
+import json
 
 # Explicitly start window thread
 cv2.startWindowThread()
@@ -15,7 +17,7 @@ cv2.startWindowThread()
 cv2.namedWindow("Object Detection", cv2.WINDOW_NORMAL)
 
 class VideoStreamThread:
-    def __init__(self, src=1, width=640, height=360, fps=30):
+    def __init__(self, src="http://10.163.206.60:8080/video", width=360, height=360, fps=30):
         self.cap = cv2.VideoCapture(src)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -72,7 +74,7 @@ class VideoStreamThread:
 
 
 class ModelInferenceThread:
-    def __init__(self, model_path='med.pt', conf=0.6, iou=0.5, max_det=5):
+    def __init__(self, model_path='plush.pt', conf=0.25, iou=0.45, max_det=10, pi_url="http://raspberry_pi_ip:5000/detections"):
         # Load the YOLO model
         self.model = YOLO(model_path)
         self.conf = conf
@@ -84,6 +86,7 @@ class ModelInferenceThread:
         self.output_queue = queue.Queue(maxsize=1)
         
         self.stopped = False
+        self.pi_url = pi_url  # URL of the Raspberry Pi server
     
     def start(self):
         # Start the thread for model inference
@@ -98,6 +101,33 @@ class ModelInferenceThread:
                 
                 # Run inference
                 results = self.model(frame, conf=self.conf, iou=self.iou, max_det=self.max_det)
+                
+                # Process detections
+                detections = []
+                for r in results:
+                    boxes = r.boxes
+                    for box in boxes:
+                        cls = int(box.cls[0])
+                        conf = float(box.conf[0])
+                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        detections.append({
+                            'class': r.names[cls],
+                            'confidence': conf,
+                            'bbox': [x1, y1, x2, y2],
+                            'timestamp': datetime.now().isoformat()
+                        })
+                
+                # Send detections to Raspberry Pi
+                try:
+                    response = requests.post(
+                        self.pi_url,
+                        json=detections,
+                        timeout=0.5  # Short timeout to not block the main loop
+                    )
+                    if response.status_code != 200:
+                        print(f"Error sending detections: {response.status_code}")
+                except requests.exceptions.RequestException as e:
+                    print(f"Failed to send detections: {e}")
                 
                 # If output queue is full, remove the oldest result
                 if self.output_queue.full():
@@ -136,11 +166,24 @@ class ModelInferenceThread:
 def main():
     # Initialize video stream and model inference threads
     print("Starting video stream...")
-    video_stream = VideoStreamThread(src=1, width=640, height=360, fps=30).start()
-    time.sleep(1.0)
+    try:
+        video_stream = VideoStreamThread(src="http://10.163.206.60:8080/video", width=360, height=360, fps=30).start()
+    except RuntimeError as e:
+        print(f"Error: {e}")
+        print("Please check that:")
+        print("1. Your camera is properly connected")
+        print("2. No other application is using the camera")
+        print("3. You have granted camera permissions to the application")
+        return
     
     print("Loading YOLO model...")
-    model_thread = ModelInferenceThread(model_path='med.pt').start()
+    model_thread = ModelInferenceThread(
+        model_path='plush.pt',
+        conf=0.25,
+        iou=0.45,
+        max_det=10,
+        pi_url="http://raspberry_pi_ip:5000/detections"  # Replace with your Pi's IP
+    ).start()
     
     # Initialize variables for FPS calculation
     fps_counter = 0
