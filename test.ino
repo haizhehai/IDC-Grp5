@@ -50,20 +50,12 @@ void parseAndDrive(String cmdStr) {
       float leftSpeedFloat = leftSpeedStr.toFloat();   // Value from -1.0 to 1.0
       float rightSpeedFloat = rightSpeedStr.toFloat(); // Value from -1.0 to 1.0
 
-      // Add debug output
-      Serial.print("Received speeds - Left: ");
-      Serial.print(leftSpeedFloat);
-      Serial.print(" Right: ");
-      Serial.println(rightSpeedFloat);
-
       driveMotors(leftSpeedFloat, rightSpeedFloat);
     } else {
-      Serial.print("Invalid command format: ");
-      Serial.println(cmdStr);
+      // Serial.print("Invalid command format: "); Serial.println(cmdStr);
     }
   } else if (cmdStr.length() > 0) {
-    Serial.print("Unknown command: ");
-    Serial.println(cmdStr);
+    // Serial.print("Unknown command: "); Serial.println(cmdStr);
   }
 }
 
