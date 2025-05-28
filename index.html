@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>diddle buttons</title>
+    <style>
+        body {
+            background: #000;
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 10px;
+            justify-items: center;
+        }
+
+        button {
+            background: #111;
+            border: 2px solid white;
+            color: white;
+            font-size: 1rem;
+            padding: 10px;
+            cursor: pointer;
+            width: 80px;
+            height: 60px;
+            transition: 0.2s;
+            user-select: none;
+        }
+
+        button:hover {
+            background: #333;
+        }
+
+        .invisible {
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+    <h1>please diddle my buttons 🙏</h1>
+    <div class="controls">
+        <div class="invisible"></div>
+        <button data-command="U">↑</button>
+        <div class="invisible"></div>
+        <button data-command="L">←</button>
+        <div class="invisible"></div>
+        <button data-command="R">→</button>
+        <div class="invisible"></div>
+        <button data-command="D">↓</button>
+        <div class="invisible"></div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        function sendCommand(command) {
+            socket.emit('move', { command });
+        }
+
+        const buttons = document.querySelectorAll('button[data-command]');
+        buttons.forEach(button => {
+            const command = button.dataset.command;
+
+            // Mouse events
+            button.addEventListener('mousedown', () => sendCommand(command));
+            button.addEventListener('mouseup', () => sendCommand('S'));
+            button.addEventListener('mouseleave', () => sendCommand('S'));
+
+            // Touch events
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                sendCommand(command);
+            }, { passive: false });
+
+            button.addEventListener('touchend', () => sendCommand('S'));
+            button.addEventListener('touchcancel', () => sendCommand('S'));
+        });
+    </script>
+</body>
+</html>
