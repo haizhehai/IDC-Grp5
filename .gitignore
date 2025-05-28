@@ -57,8 +57,5 @@ __pycache__/
 
 /Images/*
 /Dataset/*
-<<<<<<< HEAD
-/idcenv/*
-=======
-/Augmented_Images/*
->>>>>>> a9b264e7fc15832fcab7b3638c95e7a925306b01
+bro this idc pmo.v2i.yolov8/*
+/bro this idc pmo.v2i.yolov8_reshuffled/*
