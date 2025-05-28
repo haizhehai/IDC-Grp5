@@ -74,7 +74,7 @@ class VideoStreamThread:
 
 
 class ModelInferenceThread:
-    def __init__(self, model_path='plush.pt', conf=0.25, iou=0.45, max_det=10, pi_url="http://raspberry_pi_ip:5000/detections"):
+    def __init__(self, model_path='plush.pt', conf=0.25, iou=0.45, max_det=10, pi_url="http://192.168.215.79:5000/detections"):
         # Load the YOLO model
         self.model = YOLO(model_path)
         self.conf = conf
@@ -182,7 +182,7 @@ def main():
         conf=0.25,
         iou=0.45,
         max_det=10,
-        pi_url="http://raspberry_pi_ip:5000/detections"  # Replace with your Pi's IP
+        pi_url="http://192.168.215.79:5000/detections"  # Add port and endpoint
     ).start()
     
     # Initialize variables for FPS calculation
