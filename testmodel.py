@@ -15,7 +15,7 @@ cv2.startWindowThread()
 cv2.namedWindow("Object Detection", cv2.WINDOW_NORMAL)
 
 class VideoStreamThread:
-    def __init__(self, src=0, width=640, height=360, fps=30):
+    def __init__(self, src=1, width=640, height=360, fps=30):
         self.cap = cv2.VideoCapture(src)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
