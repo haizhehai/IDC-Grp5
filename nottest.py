@@ -16,15 +16,15 @@ def index():
 def handle_move(data):
     try:
         command = data.get('command', '')
-        # Convert directional commands to motor speeds
-        if command == 'U':  # Forward
-            arduino.write(b"S:0.5:0.5\n")
-        elif command == 'D':  # Backward
-            arduino.write(b"S:-0.5:-0.5\n")
-        elif command == 'L':  # Turn left
-            arduino.write(b"S:-0.3:0.3\n")
-        elif command == 'R':  # Turn right
-            arduino.write(b"S:0.3:-0.3\n")
+        # Increased motor speeds and balanced left/right
+        if command == 'U':  # Forward - increased speed
+            arduino.write(b"S:0.8:0.8\n")
+        elif command == 'D':  # Backward - increased speed
+            arduino.write(b"S:-0.8:-0.8\n")
+        elif command == 'L':  # Turn left - balanced speeds
+            arduino.write(b"S:-0.5:0.5\n")
+        elif command == 'R':  # Turn right - balanced speeds
+            arduino.write(b"S:0.5:-0.5\n")
         elif command == 'S':  # Stop
             arduino.write(b"S:0:0\n")
     except Exception as e:
