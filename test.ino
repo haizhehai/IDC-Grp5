@@ -1,29 +1,3 @@
-void setup() {
-  Serial.begin(9600);
-  // Initialize any other components (LEDs, motors, etc.)
-}
-
-void loop() {
-  if (Serial.available() > 0) {
-    String data = Serial.readStringUntil('\n');
-    
-    // Parse the data
-    // Format: "CLASS:confidence:x1,y1,x2,y2"
-    int firstColon = data.indexOf(':');
-    int secondColon = data.indexOf(':', firstColon + 1);
-    
-    String className = data.substring(0, firstColon);
-    float confidence = data.substring(firstColon + 1, secondColon).toFloat();
-    String bbox = data.substring(secondColon + 1);
-    
-    // Process the detection
-    // Example: Turn on LED for specific class
-    if (className == "target_class" && confidence > 0.5) {
-      // Do something (e.g., turn on LED, move motor, etc.)
-    }
-  }
-}
-
 // Include the Cytron Motor Driver Library
 #include <CytronMotorDriver.h>
 
@@ -76,12 +50,20 @@ void parseAndDrive(String cmdStr) {
       float leftSpeedFloat = leftSpeedStr.toFloat();   // Value from -1.0 to 1.0
       float rightSpeedFloat = rightSpeedStr.toFloat(); // Value from -1.0 to 1.0
 
+      // Add debug output
+      Serial.print("Received speeds - Left: ");
+      Serial.print(leftSpeedFloat);
+      Serial.print(" Right: ");
+      Serial.println(rightSpeedFloat);
+
       driveMotors(leftSpeedFloat, rightSpeedFloat);
     } else {
-      // Serial.print("Invalid command format: "); Serial.println(cmdStr);
+      Serial.print("Invalid command format: ");
+      Serial.println(cmdStr);
     }
   } else if (cmdStr.length() > 0) {
-    // Serial.print("Unknown command: "); Serial.println(cmdStr);
+    Serial.print("Unknown command: ");
+    Serial.println(cmdStr);
   }
 }
 
