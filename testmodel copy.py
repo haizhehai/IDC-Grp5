@@ -5,10 +5,24 @@ import time
 import threading
 import queue
 from datetime import datetime
-from ultralytics import YOLO
 from collections import Counter
 import requests
 import json
+from roboflow import Roboflow
+from dotenv import load_dotenv
+
+# Load environment variables from .env.local
+load_dotenv('.env.local')
+
+# Get Roboflow credentials from environment variables
+ROBOFLOW_API_KEY = os.getenv('ROBOFLOW_API_KEY')
+PROJECT_NAME = os.getenv('ROBOFLOW_PROJECT_NAME')
+MODEL_VERSION = os.getenv('ROBOFLOW_MODEL_VERSION')
+
+# Initialize Roboflow
+rf = Roboflow(api_key=ROBOFLOW_API_KEY)
+project = rf.workspace().project(PROJECT_NAME)
+model = project.version(MODEL_VERSION).model
 
 # Explicitly start window thread
 cv2.startWindowThread()
@@ -74,9 +88,7 @@ class VideoStreamThread:
 
 
 class ModelInferenceThread:
-    def __init__(self, model_path='med.pt', conf=0.4, iou=0.6, max_det=10):
-        # Load the YOLO model
-        self.model = YOLO(model_path)
+    def __init__(self, conf=0.4, iou=0.6, max_det=10):
         self.conf = conf
         self.iou = iou
         self.max_det = max_det
@@ -98,23 +110,36 @@ class ModelInferenceThread:
                 # Get a frame from the input queue
                 frame = self.input_queue.get(timeout=1.0)
                 
-                # Run inference
-                results = self.model(frame, conf=self.conf, iou=self.iou, max_det=self.max_det)
+                # Run inference using Roboflow
+                predictions = model.predict(frame, confidence=self.conf, overlap=self.iou).json()
                 
                 # Process detections
                 detections = []
-                for r in results:
-                    boxes = r.boxes
-                    for box in boxes:
-                        cls = int(box.cls[0])
-                        conf = float(box.conf[0])
-                        x1, y1, x2, y2 = map(int, box.xyxy[0])
-                        detections.append({
-                            'class': r.names[cls],
-                            'confidence': conf,
-                            'bbox': [x1, y1, x2, y2],
-                            'timestamp': datetime.now().isoformat()
-                        })
+                for prediction in predictions['predictions']:
+                    x1 = int(prediction['x'] - prediction['width']/2)
+                    y1 = int(prediction['y'] - prediction['height']/2)
+                    x2 = int(prediction['x'] + prediction['width']/2)
+                    y2 = int(prediction['y'] + prediction['height']/2)
+                    
+                    detections.append({
+                        'class': prediction['class'],
+                        'confidence': prediction['confidence'],
+                        'bbox': [x1, y1, x2, y2],
+                        'timestamp': datetime.now().isoformat()
+                    })
+                
+                # Draw predictions on frame
+                annotated_frame = frame.copy()
+                for det in detections:
+                    x1, y1, x2, y2 = det['bbox']
+                    cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    cv2.putText(annotated_frame, 
+                              f"{det['class']} {det['confidence']:.2f}",
+                              (x1, y1 - 10),
+                              cv2.FONT_HERSHEY_SIMPLEX,
+                              0.5,
+                              (0, 255, 0),
+                              2)
                 
                 # If output queue is full, remove the oldest result
                 if self.output_queue.full():
@@ -124,7 +149,7 @@ class ModelInferenceThread:
                         pass
                 
                 # Put the results in the output queue
-                self.output_queue.put((frame, results))
+                self.output_queue.put((annotated_frame, detections))
                 
             except queue.Empty:
                 continue
@@ -163,9 +188,8 @@ def main():
         print("3. You have granted camera permissions to the application")
         return
     
-    print("Loading YOLO model...")
+    print("Initializing Roboflow model...")
     model_thread = ModelInferenceThread(
-        model_path='med.pt',
         conf=0.4,
         iou=0.6,
         max_det=10
@@ -200,16 +224,11 @@ def main():
             # Get inference results if available
             results = model_thread.get_results()
             if results:
-                resized_frame, yolo_results = results
-                # Get the current detections
-                current_detections = yolo_results[0].boxes.cls.cpu().numpy()
+                annotated_frame, detections = results
                 # Count objects in current frame
-                current_counts = Counter([yolo_results[0].names[int(cls)] for cls in current_detections])
+                current_counts = Counter([det['class'] for det in detections])
                 # Update total counts
                 object_counter = current_counts
-                
-                # Process the results and draw on the frame
-                annotated_frame = yolo_results[0].plot()
                 latest_annotated_frame = annotated_frame
             
             # Display the annotated frame if available, otherwise show the original frame
