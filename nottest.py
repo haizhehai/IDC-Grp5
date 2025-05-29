@@ -18,9 +18,9 @@ def handle_move(data):
         command = data.get('command', '')
         # Increased motor speeds and balanced left/right
         if command == 'U':  # Forward - increased speed
-            arduino.write(b"S:0.8:0.8\n")
+            arduino.write(b"S:1.0:1.0\n")
         elif command == 'D':  # Backward - increased speed
-            arduino.write(b"S:-0.8:-0.8\n")
+            arduino.write(b"S:-1.0:-1.0\n")
         elif command == 'L':  # Turn left - balanced speeds
             arduino.write(b"S:-0.5:0.5\n")
         elif command == 'R':  # Turn right - balanced speeds

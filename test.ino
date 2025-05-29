@@ -37,8 +37,11 @@ void loop() {
 }
 
 void parseAndDrive(String cmdStr) {
+  // Add debug output for raw input
+  Serial.print("Raw input: ");
+  Serial.println(cmdStr);
+  
   // Expected format: "S:<float_left>:<float_right>"
-  // Example: "S:0.50:-0.25"
   if (cmdStr.startsWith("S:")) {
     String valuesPart = cmdStr.substring(2); // Remove the "S:" prefix
     int separatorIndex = valuesPart.indexOf(':');
@@ -47,20 +50,34 @@ void parseAndDrive(String cmdStr) {
       String leftSpeedStr = valuesPart.substring(0, separatorIndex);
       String rightSpeedStr = valuesPart.substring(separatorIndex + 1);
 
-      float leftSpeedFloat = leftSpeedStr.toFloat();   // Value from -1.0 to 1.0
-      float rightSpeedFloat = rightSpeedStr.toFloat(); // Value from -1.0 to 1.0
+      // Debug the parsed strings
+      Serial.print("Left speed string: ");
+      Serial.println(leftSpeedStr);
+      Serial.print("Right speed string: ");
+      Serial.println(rightSpeedStr);
+
+      float leftSpeedFloat = leftSpeedStr.toFloat();
+      float rightSpeedFloat = rightSpeedStr.toFloat();
+
+      // Debug the converted floats
+      Serial.print("Left speed float: ");
+      Serial.println(leftSpeedFloat);
+      Serial.print("Right speed float: ");
+      Serial.println(rightSpeedFloat);
 
       driveMotors(leftSpeedFloat, rightSpeedFloat);
     } else {
-      // Serial.print("Invalid command format: "); Serial.println(cmdStr);
+      Serial.print("Invalid command format: ");
+      Serial.println(cmdStr);
     }
   } else if (cmdStr.length() > 0) {
-    // Serial.print("Unknown command: "); Serial.println(cmdStr);
+    Serial.print("Unknown command: ");
+    Serial.println(cmdStr);
   }
 }
 
 void driveMotors(float leftFloat, float rightFloat) {
-  // Constrain inputs to be between -1.0 and 1.0 (although already done in JS)
+  // Constrain inputs to be between -1.0 and 1.0
   leftFloat = constrain(leftFloat, -1.0, 1.0);
   rightFloat = constrain(rightFloat, -1.0, 1.0);
 
@@ -68,11 +85,13 @@ void driveMotors(float leftFloat, float rightFloat) {
   int leftMotorSpeedCytron = (int)(leftFloat * 255.0);
   int rightMotorSpeedCytron = (int)(rightFloat * 255.0);
 
+  // Debug the final motor speeds
+  Serial.print("Final motor speeds - Left: ");
+  Serial.print(leftMotorSpeedCytron);
+  Serial.print(" Right: ");
+  Serial.println(rightMotorSpeedCytron);
+
   // Send speed commands to the motors using the Cytron library
   motor1.setSpeed(leftMotorSpeedCytron);
   motor2.setSpeed(rightMotorSpeedCytron);
-
-  // For debugging on Arduino Serial Monitor:
-  // Serial.print("Driving M1 (Left): "); Serial.print(leftMotorSpeedCytron);
-  // Serial.print(" | M2 (Right): "); Serial.println(rightMotorSpeedCytron);
 }

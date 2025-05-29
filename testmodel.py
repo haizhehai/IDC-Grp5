@@ -74,7 +74,7 @@ class VideoStreamThread:
 
 
 class ModelInferenceThread:
-    def __init__(self, model_path='plush.pt', conf=0.25, iou=0.45, max_det=10, pi_url="http://192.168.215.79:5000/detections"):
+    def __init__(self, model_path='med.pt', conf=0.4, iou=0.6, max_det=10, pi_url="http://192.168.215.79:5000/detections"):
         # Load the YOLO model
         self.model = YOLO(model_path)
         self.conf = conf
@@ -178,9 +178,9 @@ def main():
     
     print("Loading YOLO model...")
     model_thread = ModelInferenceThread(
-        model_path='plush.pt',
-        conf=0.25,
-        iou=0.45,
+        model_path='med.pt',
+        conf=0.4,
+        iou=0.6,
         max_det=10,
         pi_url="http://192.168.215.79:5000/detections"  # Add port and endpoint
     ).start()
