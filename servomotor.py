@@ -28,18 +28,22 @@ try:
     while True:
         # Move to 0 degrees
         set_angle(0)
+        print("skibidi")
         time.sleep(1)
         
         # Move to 90 degrees
         set_angle(90)
+        print("skibidi2")
         time.sleep(1)
         
         # Move to 180 degrees
         set_angle(180)
+        print("skibidi3")
         time.sleep(1)
         
         # Move back to 90 degrees
         set_angle(90)
+        print("skibidi2")
         time.sleep(1)
 
 except KeyboardInterrupt:
